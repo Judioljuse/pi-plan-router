@@ -84,6 +84,19 @@ The extension is a single TypeScript file; Pi loads it through jiti, so there is
 pi -e ./extensions/plan-then-implement.ts --model route/auto
 ```
 
+The router logic is covered by tests that drive `route()` directly, so they need no API key:
+
+```bash
+npm test
+```
+
+- `tests/routes.test.ts` covers every phase transition, including the cases that must **not**
+  escalate: a failure left by the strong model, a stale failure from before the switch, a
+  zero-failure count, and read-only shell work.
+- `tests/config.test.ts` covers the environment overrides and the fallback to defaults.
+
+Node 24 runs the TypeScript files directly through type stripping.
+
 ## License
 
 MIT

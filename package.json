@@ -4,12 +4,22 @@
 	"description": "Strong model plans and makes the first change, cheap model implements, automatic escalation when a check fails.",
 	"type": "module",
 	"license": "MIT",
-	"keywords": ["pi-package", "pi-extension", "router", "virtual-model"],
+	"keywords": [
+		"pi-package",
+		"pi-extension",
+		"router",
+		"virtual-model"
+	],
 	"pi": {
-		"extensions": ["./extensions/plan-then-implement.ts"]
+		"extensions": [
+			"./extensions/plan-then-implement.ts"
+		]
 	},
 	"peerDependencies": {
 		"@earendil-works/pi-ai": "*",
 		"@earendil-works/pi-coding-agent": "*"
+	},
+	"scripts": {
+		"test": "node tests/routes.test.ts && node tests/config.test.ts && PI_ROUTE_PROVIDER= PI_ROUTE_STRONG= PI_ROUTE_CHEAP= node tests/config.test.ts --fallback"
 	}
 }
