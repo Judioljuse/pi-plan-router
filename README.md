@@ -20,7 +20,7 @@ costs a fraction as much — while a failing test hands the turn back.
 ## Install
 
 ```bash
-pi install git:github.com/<you>/pi-plan-router@v0.1.0
+pi install git:github.com/Judioljuse/pi-plan-router@v0.1.0
 pi --model route/auto
 ```
 
