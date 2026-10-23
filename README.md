@@ -41,6 +41,7 @@ default for new sessions. Nothing changes until it is selected.
 | `PI_ROUTE_PROVIDER` | `tokenhub` | Provider that owns both physical models |
 | `PI_ROUTE_STRONG` | `claude-sonnet-5-5` | Planning model |
 | `PI_ROUTE_CHEAP` | `deepseek-v4.1-flash` | Implementation model |
+| `PI_ROUTE_ESCALATE_AFTER` | `1` | Failed checks tolerated before the strong model takes over. `2` lets the cheap model retry once, which avoids escalating on a failure it did not cause. |
 
 ```bash
 export PI_ROUTE_PROVIDER=anthropic
@@ -50,6 +51,20 @@ export PI_ROUTE_CHEAP=claude-haiku-4-5
 
 Both models must be in the catalog with usable credentials. A missing strong model fails the
 request instead of silently running on another model.
+
+## Thinking
+
+The virtual model offers `off`, `low`, `medium`, and `high`, and passes the selection to whichever
+model answers:
+
+```bash
+pi --model route/auto:high
+```
+
+Whether reasoning actually appears depends on the routed model, not on this extension — a model that
+declares no thinking support is clamped to `off`. On some gateways a model accepts the parameter and
+silently ignores it, so the level is accepted but no thinking blocks arrive. Check `/session` or the
+footer for the routed model, and test the level against your provider before relying on it.
 
 ## What counts as a change
 
@@ -70,6 +85,8 @@ strong model's own change is the cheap model's job, not a regression.
 ## Behavior notes
 
 - Each switch loses the prompt cache, so a turn switches at most once.
+- Escalation attributes failures only to the *latest* change, so a failure from an unrelated bug can
+  still count as a regression. Raise `PI_ROUTE_ESCALATE_AFTER` if that costs more than it saves.
 - Router state lives on the session branch: `/tree` forks and compaction keep the phase.
 - `/session` cost per model is only meaningful when the provider declares prices in `models.json`.
 - The heuristics are not proof: a mutation from a tool with an unusual name, or a failure whose
@@ -93,6 +110,7 @@ npm test
 - `tests/routes.test.ts` covers every phase transition, including the cases that must **not**
   escalate: a failure left by the strong model, a stale failure from before the switch, a
   zero-failure count, and read-only shell work.
+- `tests/budget.test.ts` covers the retry budget (`PI_ROUTE_ESCALATE_AFTER`).
 - `tests/config.test.ts` covers the environment overrides and the fallback to defaults.
 
 Node 24 runs the TypeScript files directly through type stripping.

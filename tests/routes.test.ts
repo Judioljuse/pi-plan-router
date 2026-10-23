@@ -253,6 +253,18 @@ check(
 	{ model: "claude-sonnet-5-5", phase: "planning" },
 );
 
+// --- retry budget before escalating ---------------------------------------------------------
+
+check(
+	"the first strike escalates by default",
+	route(
+		"continuation",
+		[user("fix it"), call("edit", "", "1"), toolOk("edit"), toolFail("bash", "1 failing", "2")],
+		{ phase: "implementation" },
+	),
+	{ model: "claude-sonnet-5-5", phase: "escalated" },
+);
+
 check("retry escalates to the strong model", route("retry", [user("fix it"), toolOk("edit")], { phase: "implementation" }), {
 	model: "claude-sonnet-5-5",
 	phase: "planning",

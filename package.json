@@ -20,6 +20,6 @@
 		"@earendil-works/pi-coding-agent": "*"
 	},
 	"scripts": {
-		"test": "node tests/routes.test.ts && node tests/config.test.ts && PI_ROUTE_PROVIDER= PI_ROUTE_STRONG= PI_ROUTE_CHEAP= node tests/config.test.ts --fallback"
+		"test": "node tests/routes.test.ts && node tests/budget.test.ts && node tests/config.test.ts && PI_ROUTE_PROVIDER= PI_ROUTE_STRONG= PI_ROUTE_CHEAP= node tests/config.test.ts --fallback"
 	}
 }

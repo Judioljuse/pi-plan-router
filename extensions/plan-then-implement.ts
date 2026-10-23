@@ -39,6 +39,13 @@ const STRONG = setting("PI_ROUTE_STRONG", "claude-sonnet-5-5");
 const CHEAP = setting("PI_ROUTE_CHEAP", "deepseek-v4.1-flash");
 
 /**
+ * How many failed checks after the cheap model's own change it may leave before the strong model
+ * takes the turn back. `1` escalates on the first failure; `2` lets the cheap model retry once,
+ * which avoids escalating on a failure it did not cause.
+ */
+const ESCALATE_AFTER = Math.max(1, Number(setting("PI_ROUTE_ESCALATE_AFTER", "1")) || 1);
+
+/**
  * Tools that change files, matched by name because the name depends on the extensions installed
  * (`edit`/`write` in core, `replace_match`/`insert` from the hashline editor, and so on).
  */
@@ -80,6 +87,8 @@ const FAILURE_OUTPUT: readonly RegExp[] = [
 interface RouterState {
 	/** planning: strong model. implementation: cheap model. escalated: strong model took the turn back. */
 	phase: "planning" | "implementation" | "escalated";
+	/** Consecutive failed checks seen after the cheap model's change. */
+	strikes?: number;
 }
 
 type Request = ModelRouteRequest<RouterState>;
@@ -173,7 +182,7 @@ export default function (pi: ExtensionAPI) {
 		provider: "route",
 		id: "auto",
 		name: "Plan→Implement",
-		thinkingLevels: ["off"],
+		thinkingLevels: ["off", "low", "medium", "high"],
 		// Shown before the first response; afterwards Pi uses the limits of the model that answered.
 		contextWindow: 1_000_000,
 		maxTokens: 64_000,
@@ -199,9 +208,13 @@ export default function (pi: ExtensionAPI) {
 					return toPhysical(request, ctx, CHEAP, { phase: "implementation" });
 				}
 
-				// The cheap model's change broke a check: escalate and stay escalated for this turn.
+				// The cheap model's change left a failing check: escalate once the strikes run out.
 				if (state.phase === "implementation" && regressionThisTurn(request.messages)) {
-					return toPhysical(request, ctx, STRONG, { phase: "escalated" });
+					const strikes = (state.strikes ?? 0) + 1;
+					if (strikes >= ESCALATE_AFTER) {
+						return toPhysical(request, ctx, STRONG, { phase: "escalated" });
+					}
+					return toPhysical(request, ctx, CHEAP, { phase: "implementation", strikes });
 				}
 
 				return toPhysical(request, ctx, state.phase === "implementation" ? CHEAP : STRONG, state);
