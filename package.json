@@ -1,0 +1,15 @@
+{
+	"name": "pi-plan-router",
+	"version": "0.1.0",
+	"description": "Strong model plans and makes the first change, cheap model implements, automatic escalation when a check fails.",
+	"type": "module",
+	"license": "MIT",
+	"keywords": ["pi-package", "pi-extension", "router", "virtual-model"],
+	"pi": {
+		"extensions": ["./extensions/plan-then-implement.ts"]
+	},
+	"peerDependencies": {
+		"@earendil-works/pi-ai": "*",
+		"@earendil-works/pi-coding-agent": "*"
+	}
+}
